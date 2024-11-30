@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RegistrationNewUser</title>
+</head>
+<body>
+<h1>Пройдите регистрацию</h1>
+<form th:method="POST" th:action="@{/registration}" th:object="${user}">
+    <label for="firstname">Введите Ваше имя</label>
+    <input type="text" th:field="*{firstName}" id="firstname">
+    <div style="color:red" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"> FirstUsernameError</div>
+    <br><br>
+    <label for="age">Введите возраст пользователя</label>
+    <input type="text" th:field="*{age}" id="age">
+    <div style="color:red" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"> AgeError</div>
+    <br><br>
+    <label for="username">Введите Ваш логгин</label>
+    <input type="text" th:field="*{username}" id="username">
+    <div style="color:red" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"> UsernameError</div>
+    <br><br>
+    <label for="password">Введите пароль:</label>
+    <input type="text" th:field="*{password}" id="password">
+    <div style="color:red" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"> PasswordError</div>
+    <br><br>
+    <input type="submit" value="Sing up!">
+</form>
+
+</body>
+</html>
