@@ -1,9 +1,9 @@
 package ru.kata.spring.boot_security.demo.service;
 
-import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.entity.User;
@@ -12,24 +12,30 @@ import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
-public class UserServiceImpl implements UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional
-    public List<User> findAll() {
+    public List<User> getAll() {
         return userRepository.findAll();
     }
 
     @Transactional
-    public User findById(int id) {
+    public User getUserById(int id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Transactional
-    public void save(User user) {
+    public void saveOrUpdate(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
 
@@ -38,11 +44,17 @@ public class UserServiceImpl implements UserDetailsService {
         userRepository.deleteById(id);
     }
 
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
-
     }
+
+
 }

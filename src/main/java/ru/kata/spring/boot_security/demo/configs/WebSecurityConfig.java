@@ -12,7 +12,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.kata.spring.boot_security.demo.entity.Role;
 import ru.kata.spring.boot_security.demo.entity.User;
-import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
+import ru.kata.spring.boot_security.demo.service.RoleService;
+import ru.kata.spring.boot_security.demo.service.UserService;
+import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
@@ -20,33 +23,30 @@ import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final SuccessUserHandler successUserHandler;
-    private final UserServiceImpl userService;
+    private final UserService userService;
+    private final RoleService roleService;
 
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
+                .antMatchers("/login", "/error").permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                .antMatchers("/", "/registration", "/index", "/login", "/error").permitAll()
+                .antMatchers("/user").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().loginPage("/login")
-                .loginProcessingUrl("/process_login")
-                .successHandler(successUserHandler)
-                .failureUrl("/login?error")
+                .formLogin().successHandler(successUserHandler)
                 .permitAll()
                 .and()
                 .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
                 .permitAll();
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
+        auth.userDetailsService(userService)
+                .passwordEncoder(passwordEncoder());
     }
 
     @Bean
@@ -55,14 +55,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public CommandLineRunner dataLoader(PasswordEncoder passwordEncoder) {
+    public CommandLineRunner dataLoader(){
         return args -> {
-            User user = new User("Ivan", 25,
-                    "admin",
-                    passwordEncoder.encode("password"));
-            user.addRole(new Role("ROLE_ADMIN"));
-            user.addRole(new Role("ROLE_USER"));
-            userService.save(user);
+            Role role1 = new Role(1L, "ROLE_USER");
+            Role role2 = new Role(2L, "ROLE_ADMIN");
+
+            roleService.saveRole(role1);
+            roleService.saveRole(role2);
+
+            Set<Role> roleAdmin = new HashSet<>();
+            Set<Role> roleUser = new HashSet<>();
+            roleUser.add(role1);
+            roleAdmin.add(role2);
+            User user = new User("user", "user", 14, "user", "user");
+            User admin = new User("admin", "admin", 12, "admin", "admin");
+            admin.setRoles(roleAdmin);
+            user.setRoles(roleUser);
+            userService.saveOrUpdate(admin);
+            userService.saveOrUpdate(user);
         };
     }
 }

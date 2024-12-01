@@ -1,10 +1,12 @@
 package ru.kata.spring.boot_security.demo.entity;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -32,35 +34,29 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
+    private Long id;
     @Column(name = "first_name")
     private String firstName;
-
+    @Column(name = "surName")
+    private String surName;
     @Column(name = "age")
     private Integer age;
-
-    @Column(name = "username", unique = true)
+    @Column(name = "username")
     private String username;
-
     @Column(name = "password")
     private String password;
 
     @ToString.Exclude
-    @ManyToMany(fetch = FetchType.EAGER,
-            cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    @JoinTable(name = "user_roles",
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles;
 
-    public User(String firstName, int age) {
-        this.firstName = firstName;
-        this.age = age;
-    }
 
-    public User(String firstName, Integer age, String username, String password) {
+    public User(String firstName, String surName, Integer age, String username, String password) {
         this.firstName = firstName;
+        this.surName = surName;
         this.age = age;
         this.username = username;
         this.password = password;
@@ -76,6 +72,11 @@ public class User implements UserDetails {
         if (roles != null) {
             roles.remove(role);
         }
+    }
+
+    public boolean isAdmin() {
+        return roles.stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()));
     }
 
     @Override

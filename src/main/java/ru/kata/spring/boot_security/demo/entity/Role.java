@@ -29,14 +29,15 @@ public class Role implements GrantedAuthority {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "role_Name")
     private String roleName;
 
     @ToString.Exclude
     @ManyToMany(mappedBy = "roles")
     private List<User> users;
 
-    public Role(String roleName) {
+    public Role(Long id, String roleName) {
+        this.id = id;
         this.roleName = roleName;
     }
 

@@ -1,53 +1,50 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.kata.spring.boot_security.demo.entity.User;
-import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
-
+import ru.kata.spring.boot_security.demo.service.RoleService;
+import ru.kata.spring.boot_security.demo.service.UserService;
 
 @Controller
-@RequestMapping("/admin")
 @AllArgsConstructor
 public class AdminUserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
+    private final RoleService roleService;
 
-    @GetMapping("/users")
-    public String showAllUsers(Model model) {
-        model.addAttribute("users", userService.findAll());
-        return "allUsers";
+    @GetMapping(value = "/admin")
+    public String startPageForAdmin(ModelMap model, @AuthenticationPrincipal UserDetails userDetail) {
+        User user = userService.findByUsername(userDetail.getUsername());
+        model.addAttribute("curUser", user);
+        model.addAttribute("users", userService.getAll());
+        model.addAttribute("roles", roleService.getAllRoles());
+        model.addAttribute("newUser", new User());
+        return "admin";
     }
 
-    @GetMapping("/users/new")
-    public String newUser(@RequestParam(name = "id", required = false) Integer id, Model model) {
-        validateUserId(id, model);
-        return "newUser";
+    @PostMapping("/admin/saveUser")
+    public String addUser(@ModelAttribute("newUser") User user) {
+        userService.saveOrUpdate(user);
+        return "redirect:/admin";
     }
 
-    @PostMapping("/users")
-    public String saveUser(@ModelAttribute User user) {
-        userService.save(user);
-        return "redirect:/admin/users";
-    }
-
-    @PostMapping("users/delete")
-    public String deleteUser(@RequestParam(name = "id") Integer id) {
+    @PostMapping("/admin/deleteUser")
+    public String deleteUser(@RequestParam Integer id) {
         userService.delete(id);
-        return "redirect:/admin/users";
+        return "redirect:/admin";
     }
 
-    private void validateUserId(Integer id, Model model) {
-        if (id != null) {
-            model.addAttribute("user", userService.findById(id));
-        } else {
-            model.addAttribute("user", new User());
-        }
+    @PostMapping("/admin/updateUser")
+    public String updateUserInfo(@ModelAttribute("user") User user) {
+        userService.saveOrUpdate(user);
+        return "redirect:/admin";
     }
 }
