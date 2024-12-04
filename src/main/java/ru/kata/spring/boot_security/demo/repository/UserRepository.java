@@ -9,7 +9,7 @@ import ru.kata.spring.boot_security.demo.entity.User;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface UserRepository extends JpaRepository<User, Long> {
     @Query (value = "FROM User u WHERE u.username =:username")
     Optional<User> findByUsername(@Param("username") String username);
 }
