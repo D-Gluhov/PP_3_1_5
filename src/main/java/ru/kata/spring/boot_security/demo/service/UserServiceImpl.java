@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     public void saveOrUpdate(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        ensurePassword(user);
         userRepository.save(user);
     }
 
@@ -45,6 +45,7 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    @Transactional
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -60,6 +61,23 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
+    }
+
+    @Transactional
+    public void ensurePassword(User actualUser) {
+        String passwordEncode = passwordEncoder.encode(actualUser.getPassword());
+        try {
+            User expectedUser = findByUsername(actualUser.getUsername());
+            if (!expectedUser.getPassword().equals(passwordEncode)) {
+                setUserPassword(actualUser);
+            }
+        } catch (UsernameNotFoundException e) {
+            setUserPassword(actualUser);
+        }
+    }
+
+    private void setUserPassword(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
     }
 
 
